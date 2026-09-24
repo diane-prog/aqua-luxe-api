@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from '../users/dtos';
-import { RefreshTokenDto } from './dtos';
+import { RefreshTokenDto, RegisterDto } from './dtos';
 import { SendOtpDto, VerifyOtpDto } from '../otp/dtos/otp.dto';
 import { JwtAuthGuard } from '../../common';
 
@@ -22,7 +22,7 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  register(@Body() dto: { email: string; password: string; fullName: string }) {
+  register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
