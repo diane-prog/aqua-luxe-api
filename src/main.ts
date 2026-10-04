@@ -51,6 +51,7 @@ async function bootstrap() {
         'JWT',
       )
       .addTag('Auth', 'Authentication endpoints')
+      .addTag('Cloudinary', 'File upload & management')
       .addTag('Users', 'User management (admin)')
       .addTag('Roles', 'Role management (admin)')
       .addTag('Permissions', 'Permission management (admin)')

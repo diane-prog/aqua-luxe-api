@@ -1,7 +1,8 @@
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { RoleEntity } from './entities/role.entity';
+import { PermissionEntity } from '../permissions/entities/permission.entity';
 import { CreateRoleDto, UpdateRoleDto } from './dtos';
 
 @Injectable()
@@ -11,6 +12,8 @@ export class RolesService {
   constructor(
     @InjectRepository(RoleEntity)
     private readonly roleRepository: Repository<RoleEntity>,
+    @InjectRepository(PermissionEntity)
+    private readonly permissionRepository: Repository<PermissionEntity>,
   ) {}
 
   async findAll(): Promise<RoleEntity[]> {
@@ -39,14 +42,26 @@ export class RolesService {
     if (exists) {
       throw new ConflictException(`Role ${dto.name} already exists`);
     }
+    await this.validatePermissionIds(dto.permissionIds);
     const role = this.roleRepository.create({ name: dto.name, description: dto.description });
     return this.roleRepository.save(role);
   }
 
   async update(id: string, dto: UpdateRoleDto): Promise<RoleEntity> {
     const role = await this.findOneById(id);
+    await this.validatePermissionIds(dto.permissionIds);
     Object.assign(role, dto);
     return this.roleRepository.save(role);
+  }
+
+  private async validatePermissionIds(permissionIds: string[] | undefined): Promise<void> {
+    if (permissionIds && permissionIds.length > 0) {
+      const validPermissions = await this.permissionRepository.findBy({ id: In(permissionIds) } as any);
+      if (validPermissions.length !== permissionIds.length) {
+        const invalidIds = permissionIds.filter(id => !validPermissions.some(p => p.id === id));
+        throw new BadRequestException(`Permission(s) with id(s) '${invalidIds.join(', ')}' not found`);
+      }
+    }
   }
 
   async remove(id: string): Promise<void> {

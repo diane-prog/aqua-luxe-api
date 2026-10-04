@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete, Body, Param,
+  Controller, Get, Post, Patch, Delete, Body, Param,
   UseGuards, ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -46,7 +46,7 @@ export class PackagesController {
   @ApiBearerAuth('JWT')
   @UseGuards(JwtAuthGuard)
   @RequireRoles(RoleEnum.SUPER_ADMIN, RoleEnum.ADMIN)
-  @Put('admin/:id')
+  @Patch('admin/:id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePackageDto) {
     return this.packagesService.update(id, dto);
   }

@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -40,7 +40,7 @@ export class RolesController {
     return this.rolesService.create(dto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @RequireRoles(RoleEnum.SUPER_ADMIN)
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateRoleDto) {
     return this.rolesService.update(id, dto);

@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, Public, RequireRoles } from '../../common';
 import { RoleEnum } from '../../common/enum';
@@ -17,6 +17,6 @@ export class SettingsController {
   @ApiBearerAuth('JWT')
   @UseGuards(JwtAuthGuard)
   @RequireRoles(RoleEnum.SUPER_ADMIN, RoleEnum.ADMIN)
-  @Put()
+  @Patch()
   update(@Body() dto: UpdateSettingsDto) { return this.service.update(dto); }
 }

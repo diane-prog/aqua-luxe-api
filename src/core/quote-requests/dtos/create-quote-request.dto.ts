@@ -16,7 +16,10 @@ export class CreateQuoteRequestDto {
   @IsOptional()
   phone?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: "ID of the service type. Get services from GET /services/admin/all",
+    example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  })
   @IsString()
   @IsOptional()
   serviceTypeId?: string;

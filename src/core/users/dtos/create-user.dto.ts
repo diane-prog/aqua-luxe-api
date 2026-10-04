@@ -18,6 +18,14 @@ export class CreateUserDto {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
+  avatar?: string;
+
+  @ApiPropertyOptional({
+    description: "ID of the role (super_admin, admin, editor). Get roles from GET /admin/roles",
+    example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  })
+  @IsString()
+  @IsOptional()
   roleId?: string;
 
   @ApiPropertyOptional()

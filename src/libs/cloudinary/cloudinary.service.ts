@@ -22,14 +22,15 @@ export class CloudinaryService {
     private readonly configService: ConfigService,
   ) {}
 
-  async uploadImage(
-    file: any,
-    folder: string = 'poolbk',
-  ): Promise<CloudinaryUploadResult> {
+  private get folder(): string {
+    return this.configService.get<string>('CLOUDINARY_FOLDER', 'poolbk');
+  }
+
+  async uploadImage(file: any): Promise<CloudinaryUploadResult> {
     return new Promise((resolve, reject) => {
       const uploadStream = this.cloudinary.uploader.upload_stream(
         {
-          folder,
+          folder: this.folder,
           resource_type: 'image',
           allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
           transformation: [{ quality: 'auto', fetch_format: 'auto' }],
@@ -54,11 +55,8 @@ export class CloudinaryService {
     });
   }
 
-  async uploadMultiple(
-    files: any[],
-    folder: string = 'poolbk',
-  ): Promise<CloudinaryUploadResult[]> {
-    const uploadPromises = files.map((file) => this.uploadImage(file, folder));
+  async uploadMultiple(files: any[]): Promise<CloudinaryUploadResult[]> {
+    const uploadPromises = files.map((file) => this.uploadImage(file));
     return Promise.all(uploadPromises);
   }
 

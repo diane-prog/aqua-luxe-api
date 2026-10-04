@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, Public, RequireRoles } from '../../common';
 import { RoleEnum } from '../../common/enum';
@@ -35,7 +35,7 @@ export class ProcessStepsController {
   @ApiBearerAuth('JWT')
   @UseGuards(JwtAuthGuard)
   @RequireRoles(RoleEnum.SUPER_ADMIN, RoleEnum.ADMIN)
-  @Put('admin/:id')
+  @Patch('admin/:id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProcessStepDto) { return this.service.update(id, dto); }
 
   @ApiBearerAuth('JWT')

@@ -1,7 +1,9 @@
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BlogEntity } from './entities/blog.entity';
+import { UserEntity } from '../users/entities/user.entity';
+import { BlogCategoryEntity } from '../blog-categories/entities/blog-category.entity';
 import { CreateBlogDto, UpdateBlogDto } from './dtos';
 import { BlogStatusEnum } from '../../common/enum';
 
@@ -12,6 +14,10 @@ export class BlogService {
   constructor(
     @InjectRepository(BlogEntity)
     private readonly repo: Repository<BlogEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(BlogCategoryEntity)
+    private readonly categoryRepository: Repository<BlogCategoryEntity>,
   ) {}
 
   async findAll(): Promise<BlogEntity[]> {
@@ -41,6 +47,7 @@ export class BlogService {
   async create(dto: CreateBlogDto): Promise<BlogEntity> {
     const exists = await this.repo.findOne({ where: { slug: dto.slug } as any });
     if (exists) throw new ConflictException(`Blog post with slug ${dto.slug} already exists`);
+    await this.validateForeignKeys(dto.authorId, dto.categoryId);
     if (dto.status === BlogStatusEnum.PUBLISHED && !(dto as any).publishedAt) {
       (dto as any).publishedAt = new Date();
     }
@@ -49,11 +56,27 @@ export class BlogService {
 
   async update(id: string, dto: UpdateBlogDto): Promise<BlogEntity> {
     const item = await this.findOneById(id);
+    await this.validateForeignKeys(dto.authorId, dto.categoryId);
     if (dto.status === BlogStatusEnum.PUBLISHED && item.status !== BlogStatusEnum.PUBLISHED && !(dto as any).publishedAt) {
       (dto as any).publishedAt = new Date();
     }
     Object.assign(item, dto);
     return this.repo.save(item);
+  }
+
+  private async validateForeignKeys(authorId: string | undefined, categoryId: string | undefined): Promise<void> {
+    if (authorId) {
+      const author = await this.userRepository.findOne({ where: { id: authorId } as any });
+      if (!author) {
+        throw new BadRequestException(`Author with id '${authorId}' not found`);
+      }
+    }
+    if (categoryId) {
+      const category = await this.categoryRepository.findOne({ where: { id: categoryId } as any });
+      if (!category) {
+        throw new BadRequestException(`Category with id '${categoryId}' not found`);
+      }
+    }
   }
 
   async remove(id: string): Promise<void> {

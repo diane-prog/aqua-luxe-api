@@ -1,7 +1,8 @@
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
+import { RoleEntity } from '../roles/entities/role.entity';
 import { CreateUserDto, UpdateUserDto } from './dtos';
 import { hashPassword } from '../../helpers';
 
@@ -12,6 +13,8 @@ export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(RoleEntity)
+    private readonly roleRepository: Repository<RoleEntity>,
   ) {}
 
   async findAll(): Promise<UserEntity[]> {
@@ -38,6 +41,7 @@ export class UsersService {
         password: true,
         fullName: true,
         avatar: true,
+        avatarPublicId: true,
         isActive: true,
         roleId: true,
         refreshToken: true,
@@ -46,11 +50,25 @@ export class UsersService {
     } as any);
   }
 
+  async count(): Promise<number> {
+    return this.userRepository.count();
+  }
+
+  private async validateRoleId(roleId: string | undefined): Promise<void> {
+    if (roleId) {
+      const role = await this.roleRepository.findOne({ where: { id: roleId } as any });
+      if (!role) {
+        throw new BadRequestException(`Role with id '${roleId}' not found`);
+      }
+    }
+  }
+
   async create(dto: CreateUserDto): Promise<UserEntity> {
     const exists = await this.userRepository.findOne({ where: { email: dto.email } as any });
     if (exists) {
       throw new ConflictException(`User with email ${dto.email} already exists`);
     }
+    await this.validateRoleId(dto.roleId);
     const user = this.userRepository.create({
       ...dto,
       password: dto.password,
@@ -60,6 +78,7 @@ export class UsersService {
 
   async update(id: string, dto: UpdateUserDto): Promise<UserEntity> {
     const user = await this.findOneById(id);
+    await this.validateRoleId(dto.roleId);
     Object.assign(user, dto);
     return this.userRepository.save(user);
   }

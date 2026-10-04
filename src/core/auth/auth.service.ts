@@ -7,11 +7,16 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { hashPassword, comparePassword } from '../../helpers';
 import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from '../users/dtos';
 import { OtpService } from '../otp/otp.service';
+import { RoleEntity } from '../roles/entities/role.entity';
+import { RoleEnum } from '../../common/enum';
+import { RegisterDto } from './dtos';
 
 @Injectable()
 export class AuthService {
@@ -22,19 +27,27 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly otpService: OtpService,
+    @InjectRepository(RoleEntity)
+    private readonly roleRepository: Repository<RoleEntity>,
   ) {}
 
-  async register(dto: { email: string; password: string; fullName: string }) {
+  async register(dto: RegisterDto) {
     const user = await this.usersService.findOneByEmail(dto.email);
     if (user) {
       throw new ConflictException('Email already registered');
     }
 
+    const userCount = await this.usersService.count();
+    const roleName = userCount === 0 ? RoleEnum.SUPER_ADMIN : RoleEnum.EDITOR;
+    const role = await this.roleRepository.findOne({ where: { name: roleName } });
+
     const hashedPassword = await hashPassword(dto.password);
-    const created = await this.usersService.create({
+    await this.usersService.create({
       email: dto.email,
       password: hashedPassword,
       fullName: dto.fullName,
+      avatar: dto.avatar,
+      roleId: role?.id,
       isActive: true,
     });
 
@@ -57,8 +70,10 @@ export class AuthService {
       throw new UnauthorizedException('Account is deactivated');
     }
 
+    await this.otpService.generateAndSend(dto.email);
+
     return {
-      message: 'Credentials verified. Please request a verification code.',
+      message: 'Verification code sent to your email.',
       email: user.email,
     };
   }

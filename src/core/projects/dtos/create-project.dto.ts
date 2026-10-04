@@ -27,7 +27,10 @@ export class CreateProjectDto {
   @IsOptional()
   completionDays?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: "ID of the project category. Get categories from GET /project-categories",
+    example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  })
   @IsString()
   @IsOptional()
   categoryId?: string;

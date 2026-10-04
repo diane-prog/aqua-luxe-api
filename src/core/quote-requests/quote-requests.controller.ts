@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete, Body, Param, UploadedFile,
+  Controller, Get, Post, Patch, Delete, Body, Param, UploadedFile,
   UseGuards, UseInterceptors, ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -43,7 +43,7 @@ export class QuoteRequestsController {
   @ApiBearerAuth('JWT')
   @UseGuards(JwtAuthGuard)
   @RequireRoles(RoleEnum.SUPER_ADMIN, RoleEnum.ADMIN)
-  @Put('admin/:id/status')
+  @Patch('admin/:id/status')
   updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateQuoteRequestStatusDto) {
     return this.service.updateStatus(id, dto);
   }
@@ -58,7 +58,7 @@ export class QuoteRequestsController {
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: any,
   ) {
-    const result = await this.cloudinaryService.uploadImage(file, 'poolbk/quote-requests');
+    const result = await this.cloudinaryService.uploadImage(file);
     return this.service.addAttachment(id, { url: result.secureUrl, publicId: result.publicId });
   }
 

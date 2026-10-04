@@ -1,7 +1,8 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { QuoteRequestEntity } from './entities/quote-request.entity';
+import { ServiceEntity } from '../services/entities/service.entity';
 import { CreateQuoteRequestDto, UpdateQuoteRequestStatusDto } from './dtos';
 import { QuoteRequestStatusEnum } from '../../common/enum';
 import { AdminGateway } from '../../helpers';
@@ -14,6 +15,8 @@ export class QuoteRequestsService {
   constructor(
     @InjectRepository(QuoteRequestEntity)
     private readonly repo: Repository<QuoteRequestEntity>,
+    @InjectRepository(ServiceEntity)
+    private readonly serviceRepository: Repository<ServiceEntity>,
     private readonly gateway: AdminGateway,
     private readonly mailerService: MailerService,
   ) {}
@@ -37,6 +40,7 @@ export class QuoteRequestsService {
   }
 
   async create(dto: CreateQuoteRequestDto): Promise<QuoteRequestEntity> {
+    await this.validateServiceTypeId(dto.serviceTypeId);
     const request = this.repo.create(dto);
     const saved = await this.repo.save(request);
 
@@ -44,6 +48,15 @@ export class QuoteRequestsService {
     await this.mailerService.sendQuoteConfirmation(dto.email, dto.fullName);
 
     return saved;
+  }
+
+  private async validateServiceTypeId(serviceTypeId: string | undefined): Promise<void> {
+    if (serviceTypeId) {
+      const service = await this.serviceRepository.findOne({ where: { id: serviceTypeId } as any });
+      if (!service) {
+        throw new BadRequestException(`Service with id '${serviceTypeId}' not found`);
+      }
+    }
   }
 
   async updateStatus(id: string, dto: UpdateQuoteRequestStatusDto): Promise<QuoteRequestEntity> {

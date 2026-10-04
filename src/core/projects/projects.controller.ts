@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete, Body, Param, UploadedFile, UploadedFiles,
+  Controller, Get, Post, Patch, Delete, Body, Param, UploadedFile, UploadedFiles,
   UseGuards, UseInterceptors, ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
@@ -57,7 +57,7 @@ export class ProjectsController {
   @ApiBearerAuth('JWT')
   @UseGuards(JwtAuthGuard)
   @RequireRoles(RoleEnum.SUPER_ADMIN, RoleEnum.ADMIN, RoleEnum.EDITOR)
-  @Put('admin/:id')
+  @Patch('admin/:id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProjectDto) {
     return this.projectsService.update(id, dto);
   }
@@ -72,7 +72,7 @@ export class ProjectsController {
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFiles() files: any[],
   ) {
-    const uploadResults = await this.cloudinaryService.uploadMultiple(files, 'poolbk/projects');
+    const uploadResults = await this.cloudinaryService.uploadMultiple(files);
     for (const result of uploadResults) {
       await this.projectsService.addImage(id, { url: result.secureUrl, publicId: result.publicId });
     }
@@ -93,11 +93,11 @@ export class ProjectsController {
     let afterImage: { url: string; publicId: string } | undefined;
 
     if (files[0]) {
-      const result = await this.cloudinaryService.uploadImage(files[0], 'poolbk/projects');
+      const result = await this.cloudinaryService.uploadImage(files[0]);
       beforeImage = { url: result.secureUrl, publicId: result.publicId };
     }
     if (files[1]) {
-      const result = await this.cloudinaryService.uploadImage(files[1], 'poolbk/projects');
+      const result = await this.cloudinaryService.uploadImage(files[1]);
       afterImage = { url: result.secureUrl, publicId: result.publicId };
     }
 

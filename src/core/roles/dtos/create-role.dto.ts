@@ -11,7 +11,10 @@ export class CreateRoleDto {
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ type: [String] })
+  @ApiPropertyOptional({
+    description: "Array of permission IDs. Get permissions from GET /admin/permissions",
+    example: ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+  })
   @IsOptional()
   permissionIds?: string[];
 }

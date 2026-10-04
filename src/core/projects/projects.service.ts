@@ -1,7 +1,8 @@
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProjectEntity } from './entities/project.entity';
+import { ProjectCategoryEntity } from '../project-categories/entities/project-category.entity';
 import { CreateProjectDto, UpdateProjectDto } from './dtos';
 import { ProjectStatusEnum } from '../../common/enum';
 import { CloudinaryService } from '../../libs/cloudinary';
@@ -13,6 +14,8 @@ export class ProjectsService {
   constructor(
     @InjectRepository(ProjectEntity)
     private readonly projectRepository: Repository<ProjectEntity>,
+    @InjectRepository(ProjectCategoryEntity)
+    private readonly categoryRepository: Repository<ProjectCategoryEntity>,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
@@ -43,14 +46,25 @@ export class ProjectsService {
   async create(dto: CreateProjectDto): Promise<ProjectEntity> {
     const exists = await this.projectRepository.findOne({ where: { slug: dto.slug } as any });
     if (exists) throw new ConflictException(`Project with slug ${dto.slug} already exists`);
+    await this.validateCategoryId(dto.categoryId);
     const project = this.projectRepository.create(dto);
     return this.projectRepository.save(project);
   }
 
   async update(id: string, dto: UpdateProjectDto): Promise<ProjectEntity> {
     const project = await this.findOneById(id);
+    await this.validateCategoryId(dto.categoryId);
     Object.assign(project, dto);
     return this.projectRepository.save(project);
+  }
+
+  private async validateCategoryId(categoryId: string | undefined): Promise<void> {
+    if (categoryId) {
+      const category = await this.categoryRepository.findOne({ where: { id: categoryId } as any });
+      if (!category) {
+        throw new BadRequestException(`Category with id '${categoryId}' not found`);
+      }
+    }
   }
 
   async addImage(id: string, image: { url: string; publicId: string }): Promise<ProjectEntity> {

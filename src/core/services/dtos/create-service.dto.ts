@@ -26,6 +26,19 @@ export class CreateServiceDto {
   @IsOptional()
   icon?: string;
 
+  @ApiPropertyOptional({
+    description: "URL of the cover image (upload via POST /cloudinary/upload first)",
+    example: "https://res.cloudinary.com/dgwlywkfa/image/upload/v1234567890/poolbk/image.jpg",
+  })
+  @IsString()
+  @IsOptional()
+  coverImage?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  coverImagePublicId?: string;
+
   @ApiPropertyOptional({ type: [String] })
   @IsArray()
   @IsOptional()

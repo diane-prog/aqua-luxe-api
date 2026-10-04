@@ -16,6 +16,19 @@ export class CreateTestimonialDto {
   @IsString()
   content: string;
 
+  @ApiPropertyOptional({
+    description: "URL of the author's avatar (upload via POST /cloudinary/upload first)",
+    example: "https://res.cloudinary.com/dgwlywkfa/image/upload/v1234567890/poolbk/avatar.jpg",
+  })
+  @IsString()
+  @IsOptional()
+  authorAvatar?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  authorAvatarPublicId?: string;
+
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()

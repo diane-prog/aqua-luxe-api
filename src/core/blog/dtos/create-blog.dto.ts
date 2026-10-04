@@ -22,12 +22,31 @@ export class CreateBlogDto {
   @IsOptional()
   content?: string;
 
+  @ApiPropertyOptional({
+    description: "URL of the cover image (upload via POST /cloudinary/upload first)",
+    example: "https://res.cloudinary.com/dgwlywkfa/image/upload/v1234567890/poolbk/image.jpg",
+  })
+  @IsString()
+  @IsOptional()
+  coverImage?: string;
+
   @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  coverImagePublicId?: string;
+
+  @ApiPropertyOptional({
+    description: "ID of the author (User). Get users from GET /admin/users",
+    example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  })
   @IsString()
   @IsOptional()
   authorId?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: "ID of the blog category. Get categories from GET /blog-categories",
+    example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  })
   @IsString()
   @IsOptional()
   categoryId?: string;
