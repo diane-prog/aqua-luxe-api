@@ -32,12 +32,6 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
-  @Post('send-otp')
-  @HttpCode(HttpStatus.OK)
-  sendOtp(@Body() dto: SendOtpDto) {
-    return this.authService.sendOtp(dto.email);
-  }
-
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
   verifyOtp(@Body() dto: VerifyOtpDto) {
